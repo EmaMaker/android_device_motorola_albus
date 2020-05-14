@@ -29,7 +29,7 @@
 #include <string>
 #include <vector>
 
-#include "edify/expr.h"
+#include "edify/include/edify/expr.h"
 
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
@@ -165,17 +165,17 @@ Value * VerifyTrustZoneFn(const char *name, State *state,
     int ret;
 
     ret = get_tz_version(current_tz_version, TZ_VER_BUF_LEN);
-    if (ret) {
+   /* if (ret) {
         return ErrorAbort(state, kVendorFailure,
                 "%s() failed to read current TZ version: %d", name, ret);
     }
-
+    */
     std::vector<std::string> args;
-    if (!ReadArgs(state, argv, &args)) {
+    /*if (!ReadArgs(state, argv, &args)) {
         return ErrorAbort(state, kArgsParsingFailure,
                 "%s() error parsing arguments", name);
     }
-
+    */
     ret = 0;
     for (auto& tz_version : args) {
         if (strncmp(tz_version.c_str(), current_tz_version, strlen(tz_version.c_str())) == 0) {

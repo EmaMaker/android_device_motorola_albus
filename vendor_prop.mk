@@ -86,6 +86,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
     persist.vendor.camera.display.umax=1920x1080 \
     persist.vendor.camera.display.lmax=1280x720 \
     camera.disable_zsl_mode=1 \
+    persist.camera.eis.enable=1 \
     vendor.vidc.enc.disable_bframes=1 \
     vendor.vidc.disable.split.mode=1 \
     vendor.vidc.dec.downscalar_width=1920 \
@@ -172,7 +173,10 @@ PRODUCT_PROPERTY_OVERRIDES += \
     persist.mm.sta.enable=0 \
     persist.vt.supported=0 \
     persist.volte_enabled_by_hw=1 \
-    persist.dbg.volte_avail_ovr=1
+    persist.dbg.ims_volte_enable=1 \
+    persist.dbg.volte_avail_ovr=1 \
+    persist.dbg.vt_avail_ovr=1 \
+    persist.dbg.wfc_avail_ovr=1
 
 # Media
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -238,7 +242,11 @@ PRODUCT_PROPERTY_OVERRIDES += \
     persist.rmnet.mux=enabled \
     ro.telephony.call_ring.multiple=false \
     persist.vendor.radio.eri64_as_home=1 \
-    persist.vendor.radio.data_con_rprt=1
+    persist.vendor.radio.data_con_rprt=1 \
+    persist.radio.rat_on=combine \
+    persist.radio.data_ltd_sys_ind=1 \
+    persist.radio.data_con_rprt=1 \
+    persist.radio.calls.on.ims=1
     
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.use_data_netmgrd=true \
@@ -304,3 +312,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.vendor.extension_library=libqti-perfd-client.so \
     ro.vendor.at_library=libqti-at.so \
     ro.vendor.gt_library=libqti-gt.so
+
+## Enable disable menubar (0 enable - 1 disable)
+PRODUCT_PROPERTY_OVERRIDES += \
+    qemu.hw.mainkeys=1
+
