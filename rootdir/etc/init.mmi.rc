@@ -6,6 +6,7 @@ import /vendor/etc/init/hw/init.mods.rc
 
 on early-boot
     write /sys/module/subsystem_restart/parameters/disable_restart_work 0x0
+    write /proc/sys/kernel/poweroff_cmd "/system/bin/reboot -p"
 
 on init
     chown system log /sys/fs/pstore/console-ramoops-0
@@ -27,7 +28,6 @@ on post-fs
     mkdir /persist/camera 0755 oem_5004 oem_5004
     mkdir /persist/camera/focus 0775 camera oem_5004
     mkdir /persist/camera/ledcal 0775 camera oem_5004
-    mkdir /persist/batt_health 0755 oem_5001 oem_5001
     mkdir /persist/mdm 0770 radio radio
     mkdir /persist/factory 0755 oem_5004 oem_5004
     mkdir /persist/factory/audio 0755 oem_5004 system
@@ -37,7 +37,7 @@ on post-fs
     mkdir /persist/public/atvc 0770 oem_5012 shell
     mkdir /persist/public/battd 0755 oem_5000 oem_5004
     mkdir /persist/public/att_dm 0775 radio oem_5004
-    mkdir /persist/public/hiddenmenu 0775 radio oem_5004
+    mkdir /persist/public/hiddenmenu 0755 radio oem_5004
     mkdir /persist/public/hiddenmenu/data 0775 system oem_5004
     mkdir /persist/public/locale 0700 system system
     mkdir /persist/public/omadm 0700 radio radio
@@ -45,13 +45,9 @@ on post-fs
     mkdir /persist/wifi 0755 oem_5004 oem_5004
     mkdir /persist/bt 0755 oem_5004 bluetooth
     mkdir /persist/wmdrm 0775 oem_5003 oem_5003
-    mkdir /persist/public/usc_dm 0775 radio radio
     mkdir /persist/sds 0700 vold vold
     mkdir /persist/rfs/msm/mpss/mot_rfs 0771 rfs system
-
-    # This dir is used to store any OMA(both DM and CP) files in persist partition
-    # Any app with radio UID or oem_5004 GID can read/write/execute files in this dir.
-    mkdir /persist/public/oma 0775 radio oem_5004
+    mkdir /persist/public/usc_dm 0775 radio radio
 
     chown oem_5004 oem_5004 /persist/factory/fti
     chmod 0660 /persist/factory/fti
@@ -74,9 +70,14 @@ on post-fs
 
     write /proc/sys/vm/page-cluster 0
 
+   # Change permission for fingerprint sensor
+   chown system oem_5004 /sys/devices/soc/soc:fpc_fpc1020/nav
+   chown system oem_5004 /sys/devices/soc/soc:fpc_fpc1020/dev_enable
+   chown system oem_5004 /sys/devices/soc/soc:fpc_fpc1020/irq
+   chown system oem_5004 /sys/devices/soc/soc:fpc_fpc1020/irq_cnt
+   chmod 0440 /sys/devices/soc/soc:fpc_fpc1020/irq_cnt
+
 on post-fs-data
-    # AK09912 calibration file directory
-    mkdir /data/misc/akmd 0770 system compass
 
     #setup folder for WLAN WAPI
     chmod 0770 /data/wapi_certificate
@@ -115,7 +116,7 @@ on post-fs-data
     mkdir /data/system/dropbox-add 0730 system diag
 
     # Create directory for cutback
-    mkdir /data/vendor/misc/cutback 0770 radio wifi
+    mkdir /data/vendor/cutback 0770 radio wifi
 
     # Create directory for fm_radio
     mkdir /data/misc/fm_radio 0770 system system
@@ -126,6 +127,11 @@ on post-fs-data
 
     # Create bug2go folder
     mkdir /data/bug2go 0770 log log
+
+    # Permissions for phone power off log
+    mkdir /data/power_log 0750 root log
+    chmod 0660 /sys/module/power_supply_log/parameters/log_file
+    write /sys/module/power_supply_log/parameters/log_file /data/power_log/power_off.log
 
     # Subsystem RAM-dumps
     mkdir /data/ss-ram-dumps 0750 system log
@@ -138,10 +144,6 @@ on post-fs-data
     # SD card encryption metadata
     mkdir /data/misc/sds 0750 root root
 
-    # Required by FingerPrint Cards (FPC) via init so we don't need to give qseecomd or fingerprintd permissions to create them
-    mkdir /data/fpc 0700 system system
-    mkdir /data/.fps 0770 system fingerp
-
     #Folder for hardware properties
     mkdir /data/hardware_revisions 0755 system system
 
@@ -152,7 +154,7 @@ on post-fs-data
     mkdir /data/camera_dump 0750 media media
 
     # Imager tuning data for camera subsystem
-    mkdir /data/vendor/misc/imager 0771 camera camera
+    mkdir /data/vendor/misc/imager 0771 camera camera    
 
     # OTA Package directory
     mkdir /data/misc_ne 0770 system cache
@@ -162,6 +164,14 @@ on post-fs-data
 
     #setup folder for WLAN WAPI
     chmod 0770 /data/wapi_certificate
+
+    mkdir /data/misc/sensors 0755 system system
+
+    # Enable directory writer xattr for 2nd level directory /storage/emulated/xx/yy
+    setfattr /data/media user.dwriter /%s/%s 0
+
+    # Enable relatime for /storage/emulated/xx/Download
+    setfattr /data/media user.relatime /%s/Download:com.motorola.mya 0
 
 on boot
    # restore default console_loglevel to KERN_DEBUG
@@ -176,11 +186,6 @@ on boot
    chmod 0660 /sys/module/phy_msm_usb/parameters/host_mode_disable
    chown root oem_5004 /sys/devices/soc/7000000.ssusb/disable_id_pin
    chmod 0220 /sys/devices/soc/7000000.ssusb/disable_id_pin
-
-   # Change ownership and permission for vibrator
-   chown system system /sys/class/timed_output/vibrator/enable
-   chmod 0660 /sys/class/timed_output/vibrator/enable
-   chown root oem_5020 /sys/bus/i2c/devices/2-005a/reduce
 
    # change permission for capsensor
    chmod 0660 /sys/class/capsense/enable
@@ -205,15 +210,7 @@ on boot
    chown root oem_5004 /sys/class/i2c-adapter/i2c-2/2-002d/hsic_vdd
    chmod 0660 /sys/class/i2c-adapter/i2c-2/2-002d/hsic_vdd
 
-   # Change permission for fingerprint sensor
-   chown system oem_5004 /sys/bus/spi/devices/spi8.0/nav
-   chown system oem_5004 /sys/bus/spi/devices/spi8.0/clk_enable
-   chown system oem_5004 /sys/bus/spi/devices/spi8.0/dev_enable
-   chown system oem_5004 /sys/bus/spi/devices/spi8.0/irq
-   chown system oem_5004 /sys/bus/spi/devices/spi8.0/irq_cnt
-   chmod 0440 /sys/bus/spi/devices/spi8.0/irq_cnt
-
- # Change ownership and permission for backlight
+   # Change ownership and permission for backlight
    chown system system /sys/class/backlight/lcd-backlight:0/brightness
    chmod 0664 /sys/class/backlight/lcd-backlight:0/brightness
    chown system system /sys/class/backlight/lcd-backlight:0/max_brightness
@@ -234,26 +231,32 @@ on boot
    chmod 0660 /sys/class/timed_output/vibrator/enable
 
    # Change ownership and permission for laser_sensor
-   chown system system /sys/kernel/range/enable_sar
-   chmod 0660 /sys/kernel/range/enable_sar
-   chown system system /sys/kernel/range/set_delay_ms
-   chmod 0660 /sys/kernel/range/set_delay_ms
-   chown system system /sys/kernel/range/near
-   chmod 0660 /sys/kernel/range/near
+   chown system system /sys/class/input/input3/enable_sar
+   chmod 0660 /sys/class/input/input3/enable_sar
+   chown system system /sys/class/input/input3/set_delay_ms
+   chmod 0660 /sys/class/input/input3/set_delay_ms
+   chown system system /sys/class/input/input3/do_flush
+   chmod 0660 /sys/class/input/input3/do_flush
+   chown system system /sys/class/input/input3/autonomous_config
+   chmod 0660 /sys/class/input/input3/autonomous_config
+   chown system system /sys/class/input/input3/offset
+   chmod 0660 /sys/class/input/input3/offset
 
-# Change ownership and permission for rear_sensor
-   chown system system /sys/class/i2c-dev/i2c-2/device/2-0049/enable_sar
-   chmod 0660 /sys/class/i2c-dev/i2c-2/device/2-0049/enable_sar
-   chown system system /sys/class/i2c-dev/i2c-2/device/2-0049/set_delay_ms
-   chmod 0660 /sys/class/i2c-dev/i2c-2/device/2-0049/set_delay_ms
-   chown system system /sys/class/i2c-dev/i2c-6/device/6-0049/enable_sar
-   chmod 0660 /sys/class/i2c-dev/i2c-6/device/6-0049/enable_sar
-   chown system system /sys/class/i2c-dev/i2c-6/device/6-0049/set_delay_ms
-   chmod 0660 /sys/class/i2c-dev/i2c-6/device/6-0049/set_delay_ms
+#change ownership and permission for LTR559
+   chown system system /sys/class/sensors/Rear\ Proximity\ sensor/enable
+   chown system system /sys/class/sensors/Rear\ Proximity\ sensor/poll_delay
+   chown system system /sys/class/sensors/Rear\ Proximity\ sensor/enable_wakeup
+   chmod 0660 /sys/class/sensors/Rear\ Proximity\ sensor/enable
+   chmod 0660 /sys/class/sensors/Rear\ Proximity\ sensor/poll_delay
+   chmod 0660 /sys/class/sensors/Rear\ Proximity\ sensor/enable_wakeup
 
 # Change the ownership of display TE files for tcmds
    chown root oem_5004 /sys/class/graphics/fb0/te_enable
    chown root oem_5004 /sys/class/graphics/fb0/frame_counter
+
+   chmod 0755 /persist/sensors
+   chmod 0644 /persist/sensors/sensors_settings
+   chown system root /persist/sensors/sensors_settings
 
 
 # FPC device parameter permissions
@@ -264,7 +267,7 @@ on boot
    chown system oem_5004 /sys/bus/spi/devices/spi12.0/irq_cnt
    chmod 0440 /sys/bus/spi/devices/spi12.0/irq_cnt
 
-   # Change ownership of aov related sysfs entries
+# Change ownership of aov related sysfs entries
    wait /sys/kernel/aov/event
    chown audio audio /sys/kernel/aov/trigger
    chown audio audio /sys/kernel/aov/register
@@ -273,14 +276,11 @@ on boot
    # Quiet binder logs
    write /sys/module/binder/parameters/debug_mask 0x5
 
-   # Clear cooldown state
-   mkdir /persist/chargeonly 0770 system system
-   write /persist/chargeonly/cooldown n
-   chown system system /persist/chargeonly/cooldown
-   chmod 0660 /persist/chargeonly/cooldown
+   # Change ownership for vibrator
+   chown oem5001 oem_5001 /sys/bus/i2c/devices/2-005a/reduce
 
 # Pass carrier to wlan
-service vendor.init_wifi /vendor/bin/sh /vendor/bin/wlan_carrier_bin.sh
+service init_wifi /vendor/bin/sh /vendor/bin/wlan_carrier_bin.sh
     class main
     user root
     group root
@@ -298,8 +298,8 @@ on charger
 on moto-charger
     setprop ro.board.platform msm8953
     trigger firmware_mounts_complete
-    start vendor.charger
-    start vendor.thermal-com
+    start charge_only_mode
+    start thermal-com
 
 on property:ro.boot.dualsim=true
    setprop persist.radio.multisim.config dsds
@@ -310,7 +310,7 @@ on property:ro.boot.dualsim=false
    setprop ro.telephony.default_network 10
 
 on property:ro.boot.hwrev=*
-   start vendor.mmi-boot-sh
+   start mmi-boot-sh
 
 service adspd /vendor/bin/adspd
    class main
@@ -318,7 +318,7 @@ service adspd /vendor/bin/adspd
    user audio
    group audio input diag
 
-service vendor.mmi-boot-sh /vendor/bin/sh /vendor/bin/init.mmi.boot.sh
+service mmi-boot-sh /vendor/bin/sh /vendor/bin/init.mmi.boot.sh
     class core
     user root
     oneshot
@@ -329,14 +329,24 @@ service mmi-laser-sh /vendor/bin/sh /vendor/bin/init.mmi.laser.sh
     user root
     oneshot
 
-# Start Sensor daemon
-service motosh /vendor/bin/motosh boot
-    class main
-    user compass
-    group compass misc input
-    oneshot
+service charge_only_mode /vendor/bin/charge_only_mode
+    user root
+    group graphics system input
+    disabled
 
-service vendor.thermal-com /vendor/bin/thermal-engine --minimode
+service sensors /vendor/bin/sensors.qcom
+    class core
+    user root
+    group root
+
+service vl53l1_daemon /vendor/bin/vl53l1_daemon
+    class late_start
+    user root
+    group root
+    seclabel u:r:vl53l1:s0
+    socket vl53l1_daemon stream 660 root system
+
+service thermal-com /vendor/bin/thermal-engine --minimode
     class main
     user root
     disabled
@@ -355,3 +365,7 @@ on property:sys.wifi.tethering=false
 
 on property:ro.bootmode=normal
    write /sys/module/usb3813_hub/parameters/boost_val 3
+
+on property:sys.boot_completed=1
+    # Enable ZRAM on boot_complete
+    swapon_all /vendor/etc/fstab.qcom
