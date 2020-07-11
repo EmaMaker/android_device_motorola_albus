@@ -1,4 +1,4 @@
-# Copyright (c) 2009-2012, 2014-2020, The Linux Foundation. All rights reserved.
+# Copyright (c) 2009-2012, 2014-2018, The Linux Foundation. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -27,62 +27,22 @@
 import /vendor/etc/init/hw/init.${ro.boot.hardware.sku}.rc
 
 on init
-	
-    setprop ro.vendor.fsg-id ${ro.boot.fsg-id}
     setprop ro.vendor.hw.dualsim ${ro.boot.dualsim}
     setprop ro.vendor.hw.device ${ro.boot.device}
     setprop ro.vendor.hw.radio ${ro.boot.radio}
     setprop ro.vendor.hw.hwrev ${ro.boot.hwrev}
-    setprop ro.vendor.hw.revision ${ro.boot.revision}
+    setprop ro.carrier ${ro.boot.carrier}
     setprop ro.vendor.carrier ${ro.boot.carrier}
-	
-    setprop ro.vendor.boot.cid ${ro.boot.cid}
     setprop ro.vendor.boot.radio ${ro.boot.radio}
-	
+    setprop ro.vendor.fsg-id ${ro.boot.fsg-id}
     setprop ro.vendor.boot.hwrev ${ro.boot.hwrev}
-	
-    setprop ro.vendor.boot.powerup_reason ${ro.boot.powerup_reason}
-	
-    setprop ro.vendor.boot.bl_state ${ro.boot.bl_state}
-	
-    setprop ro.vendor.boot.serialno ${ro.boot.serialno}
     setprop ro.vendor.zygote ${ro.zygote}
     setprop ro.vendor.hw.fps true
     setprop ro.vendor.hw.imager 12MP
     setprop ro.product.manufacturer Motorola
-	
-# Translate MMI property in order to keep consistent with QCOM
+
 on property:ro.vendor.hw.dualsim=true
     setprop persist.radio.multisim.config dsds
+
 on property:ro.vendor.hw.dualsim=false
     setprop persist.radio.multisim.config ""
-
-on property:ro.boot.radio=India
-    setprop ro.radio.imei.sv 10
-
-on property:ro.boot.radio=EMEA_APAC
-    setprop ro.radio.imei.sv 10
-
-on property:ro.boot.radio=Brazil
-    setprop ro.radio.imei.sv 10
-
-on property:ro.boot.hardware.sku=XT1710-01 && ro.boot.radio=NA
-    setprop ro.radio.imei.sv 9
-
-on property:ro.boot.hardware.sku=XT1710-02 && ro.boot.radio=NA
-    setprop ro.radio.imei.sv 1
-
-on property:ro.boot.hardware.sku=XT1710-01
-    setprop ro.telephony.default_network 10,0
-
-on property:ro.boot.hardware.sku=XT1710-07
-    setprop ro.telephony.default_network 10,0
-
-on property:ro.boot.hardware.sku=XT1710-09
-    setprop ro.telephony.default_network 10,0
-
-on property:ro.boot.hardware.sku=XT1710-10
-    setprop ro.telephony.default_network 10,0
-
-on property:ro.boot.hardware.sku=XT1710-02
-    setprop ro.telephony.default_network 10
