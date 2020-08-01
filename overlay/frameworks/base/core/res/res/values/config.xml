@@ -40,7 +40,7 @@
     <integer-array name="config_autoBrightnessLevels">
         <item>1</item>
         <item>6</item>
-	<item>12</item>
+        <item>12</item>
         <item>25</item>
         <item>50</item>
         <item>80</item>
@@ -230,6 +230,10 @@
           May be less than the minimum allowed brightness setting
           that can be set by the user. -->
     <integer name="config_screenBrightnessDoze">17</integer>
+    
+    <!-- Minimum screen brightness setting allowed by the power manager.
+         The user is forbidden from setting the brightness below this level. -->
+    <integer name="config_screenBrightnessSettingMinimum">1</integer>
 
     <!-- ComponentName of a dream to show whenever the system would otherwise have
          gone to sleep.  When the PowerManager is asked to go to sleep, it will instead
@@ -268,7 +272,11 @@
 
     <!-- Flag specifying whether VoLTE is available on device -->
     <bool name="config_device_volte_available">true</bool>
-
+	<!-- Flag specifying whether VT should be available for carrier: independent of
+         carrier provisioning. If false: hard disabled. If true: then depends on carrier
+         provisioning, availability etc -->
+    <bool name="config_carrier_vt_available">true</bool>
+    
     <!-- Flag specifying whether VoLTE should be available for carrier: independent of
          carrier provisioning. If false: hard disabled. If true: then depends on carrier
          provisioning, availability etc -->
